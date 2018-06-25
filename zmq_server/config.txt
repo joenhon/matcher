@@ -1,0 +1,13 @@
+cs_zmq.url=tcp://192.168.0.173:594648
+
+addOrder.url=tcp://192.168.0.173:55557
+
+remakeOrder.url=tcp://192.168.0.173:9998
+
+RMQ.hostname=192.168.0.116
+RMQ.bindingkey=q_s_eth_bss_tx
+RMQ.port=5672
+RMQ.name=admin
+RMQ.pwd=admin
+Redis.url=192.168.0.173
+Redis.port=6379
