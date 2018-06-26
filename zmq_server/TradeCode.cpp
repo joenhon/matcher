@@ -4,7 +4,9 @@
  priority_queue<O, vector<O>, SellQuene> sellQuene;
  priority_queue<O, vector<O>, BuyQuene> removeBuyQuene;
  priority_queue<O, vector<O>, SellQuene> removeSellQuene;
- CRITICAL_SECTION buyQuene_CS, sellQuene_CS, removeBuyQuene_CS, removeSellQuene_CS, RabbitMQ_Send_CS;
+ priority_queue<O, vector<O>, BuyQuene> buyQuene_a1;
+ priority_queue<O, vector<O>, SellQuene> sellQuene_a1;
+ CRITICAL_SECTION buyQuene_CS, sellQuene_CS, removeBuyQuene_CS, removeSellQuene_CS, RabbitMQ_Send_CS, buyQuene_CS_a1, sellQuene_CS_a1;
  ObjPool<RabbitMQ> RMQ;
  ObjPool<Redis> redis;
 
@@ -128,10 +130,14 @@ void TradeCode::core()
 									//EnterCriticalSection(&RabbitMQ_Send_CS);
 									/*RabbitMQ rmq;
 									rmq.send(tx);
-									rmq.~RabbitMQ();*/						
+									rmq.~RabbitMQ();*/	
+
+									//发送撮合完成订单信息
 									c.fs();
 									//LeaveCriticalSection(&RabbitMQ_Send_CS);
-									Redis_();
+									/*将数据备份到Redis中（暂定）*/
+									//Redis_();
+									//在控制台中打印交易信息
 									cout << txType << endl;
 									//cout << "发送" << endl;
 								}

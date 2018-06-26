@@ -65,25 +65,27 @@ void OrderTradeThread::addOrder()
 					order = toOrder(root);
 					if (order.getOrderType().compare("sell")==0)
 					{
-						EnterCriticalSection(&sellQuene_CS);
-						sellQuene.push(order);//向卖单队列添加
-						LeaveCriticalSection(&sellQuene_CS);
-
-						ToJson<SellQuene> toJson;
-						redis_.open();
-						redis_.setRedis("sellQuene",toJson.OToJson(sellQuene));
-						toJson.~ToJson();
+						EnterCriticalSection(&sellQuene_CS_a1);
+						sellQuene_a1.push(order);//向定时卖单队列添加
+						LeaveCriticalSection(&sellQuene_CS_a1);
+						/*转json方法*/
+						//ToJson<SellQuene> toJson;
+						/*打开Redis连接并发送数据*/
+						//redis_.open();
+						//redis_.setRedis("sellQuene",toJson.OToJson(sellQuene));
+						//toJson.~ToJson();
 					}
 					else
 					{
-						EnterCriticalSection(&buyQuene_CS);
-						buyQuene.push(order);//向买单队列添加
-						LeaveCriticalSection(&buyQuene_CS);
-
-						ToJson<BuyQuene> toJson;
-						redis_.open();
-						redis_.setRedis("buyQuene", toJson.OToJson(buyQuene));
-						toJson.~ToJson();
+						EnterCriticalSection(&buyQuene_CS_a1);
+						buyQuene_a1.push(order);//向定时买单队列添加
+						LeaveCriticalSection(&buyQuene_CS_a1);
+						/*转json方法*/
+						//ToJson<BuyQuene> toJson;
+						/*打开Redis连接并发送数据*/
+						//redis_.open();
+						//redis_.setRedis("buyQuene", toJson.OToJson(buyQuene));
+						//toJson.~ToJson();
 					}
 					//发送部分
 					//zmq_msg_init_size(&send_msg, 2);
@@ -98,6 +100,7 @@ void OrderTradeThread::addOrder()
 					//memcpy(zmq_msg_data(&send_msg), "error", 5);
 					//zmq_sendmsg(z_socket, &send_msg, 0);
 					//zmq_msg_close(&send_msg);
+					//BOOST_LOG(log) << "解析json错误：" << root; 
 					cout << "解析json错误：" << root << endl;
 				}
 

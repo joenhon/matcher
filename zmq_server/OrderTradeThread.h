@@ -22,11 +22,13 @@
 #include "Redis.h"
 #include "ToJson.h"
 #include "Config_.h"
+#include "Log.h"
 using std::shared_ptr;
 class OrderTradeThread
 {
 public:
 	friend class boost::serialization::access;
+	//src::logger log;
 	OrderTradeThread();
 	~OrderTradeThread();
 	bool eq(O o1, O o2);

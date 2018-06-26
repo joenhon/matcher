@@ -95,6 +95,9 @@
     <ClInclude Include="Config_.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="zmq_server.rc">

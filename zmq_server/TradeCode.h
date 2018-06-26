@@ -52,14 +52,26 @@ using namespace std;
 		return  false;
 	}
 };
+ //购买优先级队列
  extern priority_queue<O, vector<O>, BuyQuene> buyQuene;
+ //出售优先级队列
  extern priority_queue<O, vector<O>, SellQuene> sellQuene;
+ //购买撤单优先级队列
  extern priority_queue<O, vector<O>, BuyQuene> removeBuyQuene;
+ //出售撤单优先级队列
  extern priority_queue<O, vector<O>, SellQuene> removeSellQuene;
- extern CRITICAL_SECTION buyQuene_CS,sellQuene_CS, removeBuyQuene_CS, removeSellQuene_CS, RabbitMQ_Send_CS;
+
+ /*定时同步Quene与Quene_a1*/
+ //由定时控制的优先级队列/*定时，将网络繁忙度通过算法的出下一次同步的间隔*/
+ extern priority_queue<O, vector<O>, BuyQuene> buyQuene_a1;
+ extern priority_queue<O, vector<O>, SellQuene> sellQuene_a1;
+ //线程锁，调用需同步的方法或参数执行，阻塞其他的调用，直到调用的方法完成调用
+ extern CRITICAL_SECTION buyQuene_CS,sellQuene_CS, removeBuyQuene_CS, removeSellQuene_CS, RabbitMQ_Send_CS, buyQuene_CS_a1, sellQuene_CS_a1;
+
  extern ObjPool<RabbitMQ> RMQ;
  extern ObjPool<Redis> redis;
  static cs_zmq c;
+
 
  class TradeCode
 {

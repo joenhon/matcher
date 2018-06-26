@@ -2,6 +2,7 @@
 #include <process.h>
 #include <thread> 
 #include <stdio.h>
+#include <time.h>  
 #include "zmq.h"
 #include "zmq_utils.h"
 #pragma comment(lib,"libzmq-v120-mt-4_0_4.lib")
@@ -50,7 +51,8 @@ int main()
 	InitializeCriticalSection(&removeSellQuene_CS);
 	InitializeCriticalSection(&removeBuyQuene_CS);
 	InitializeCriticalSection(&RabbitMQ_Send_CS);
-
+	InitializeCriticalSection(&buyQuene_CS_a1);
+	InitializeCriticalSection(&sellQuene_CS_a1);
 	ToJson<BuyQuene> toJson_buyQuene;
 	ToJson<SellQuene> toJson_sellQuene;
 	ToJson<BuyQuene> toJson_removeBuyQuene;
@@ -85,9 +87,35 @@ int main()
 	thread addOrder(addOrder), remakeOrder(remakeOrder), sellRevokeThreda(sellRevoke), buyRevokeThreda(buyRevoke);
 	//HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, addOrder, 0, 0, NULL);
 	//核心（撮合）
+	int number = 0;
 	while (true)
 	{
+		number++;
 		TC.core();
+
+		
+		if (number == 50) {
+			number = 0;
+			//执行同步
+			//开始线程锁
+			EnterCriticalSection(&sellQuene_CS);
+			for (size_t i = 0; i < sellQuene_a1.size(); i++)
+			{
+				sellQuene.push(sellQuene_a1.top());
+				sellQuene_a1.pop();
+			}
+			//关闭线程锁
+			LeaveCriticalSection(&sellQuene_CS);
+
+			EnterCriticalSection(&buyQuene_CS);
+			for (size_t i = 0; i < buyQuene_a1.size(); i++)
+			{
+				buyQuene.push(buyQuene_a1.top());
+				buyQuene_a1.pop();
+			}
+			LeaveCriticalSection(&buyQuene_CS);
+		}
+
 		//Sleep(1);
 	}
 	//while (!buyQuene.empty()) {
