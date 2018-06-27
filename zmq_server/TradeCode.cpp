@@ -128,17 +128,18 @@ void TradeCode::core()
 								try
 								{
 									//EnterCriticalSection(&RabbitMQ_Send_CS);
+									
+
+									//发送撮合完成订单信息
 									/*RabbitMQ rmq;
 									rmq.send(tx);
 									rmq.~RabbitMQ();*/	
-
-									//发送撮合完成订单信息
 									c.fs();
 									//LeaveCriticalSection(&RabbitMQ_Send_CS);
 									/*将数据备份到Redis中（暂定）*/
 									//Redis_();
 									//在控制台中打印交易信息
-									cout << txType << endl;
+									//cout << txType << endl;
 									//cout << "发送" << endl;
 								}
 								catch (const std::exception&)

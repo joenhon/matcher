@@ -3,6 +3,7 @@
 #include <thread> 
 #include <stdio.h>
 #include <time.h>  
+#include <math.h> 
 #include "zmq.h"
 #include "zmq_utils.h"
 #pragma comment(lib,"libzmq-v120-mt-4_0_4.lib")
@@ -23,6 +24,7 @@ using namespace std;
 static TradeCode TC;
 void addOrder();
 void addOrder();
+void SynchronousQueue();
 void sellRevoke();
 void buyRevoke();
 void remakeOrder();
@@ -57,8 +59,9 @@ int main()
 	ToJson<SellQuene> toJson_sellQuene;
 	ToJson<BuyQuene> toJson_removeBuyQuene;
 	ToJson<SellQuene> toJson_removeSellQuene;
+	//启动撮合是读取Redis数据（暂定）
+	/*
 	redis_.open();
-
 	EnterCriticalSection(&sellQuene_CS);
 	EnterCriticalSection(&buyQuene_CS);
 	EnterCriticalSection(&removeSellQuene_CS);
@@ -83,39 +86,13 @@ int main()
 	LeaveCriticalSection(&buyQuene_CS);
 	LeaveCriticalSection(&removeSellQuene_CS);
 	LeaveCriticalSection(&removeBuyQuene_CS);
-
-	thread addOrder(addOrder), remakeOrder(remakeOrder), sellRevokeThreda(sellRevoke), buyRevokeThreda(buyRevoke);
+	*/
+	thread addOrder(addOrder), remakeOrder(remakeOrder), sellRevokeThreda(sellRevoke), buyRevokeThreda(buyRevoke), SynchronousQueue(SynchronousQueue);
 	//HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, addOrder, 0, 0, NULL);
 	//核心（撮合）
-	int number = 0;
 	while (true)
 	{
-		number++;
 		TC.core();
-
-		
-		if (number == 50) {
-			number = 0;
-			//执行同步
-			//开始线程锁
-			EnterCriticalSection(&sellQuene_CS);
-			for (size_t i = 0; i < sellQuene_a1.size(); i++)
-			{
-				sellQuene.push(sellQuene_a1.top());
-				sellQuene_a1.pop();
-			}
-			//关闭线程锁
-			LeaveCriticalSection(&sellQuene_CS);
-
-			EnterCriticalSection(&buyQuene_CS);
-			for (size_t i = 0; i < buyQuene_a1.size(); i++)
-			{
-				buyQuene.push(buyQuene_a1.top());
-				buyQuene_a1.pop();
-			}
-			LeaveCriticalSection(&buyQuene_CS);
-		}
-
 		//Sleep(1);
 	}
 	//while (!buyQuene.empty()) {
@@ -138,6 +115,48 @@ void addOrder()
 void  remakeOrder()
 {
 	ROTT.remakeOrder();
+}
+/*
+同步队列
+*/
+void SynchronousQueue()
+{
+	int number = 10, old = 10;
+	while (true) {
+		if (number==0)
+		{
+			number = 10;
+			old = 10;
+		}
+		int syn = ceil((number / old + 1)*5);
+		cout << syn << endl;
+		Sleep(syn);
+		old = syn;
+		//执行同步
+		//开始线程锁
+		EnterCriticalSection(&sellQuene_CS_a1);
+		EnterCriticalSection(&sellQuene_CS);
+		number = sellQuene_a1.size();
+		for (size_t i = 0; i < sellQuene_a1.size(); i++)
+		{
+			sellQuene.push(sellQuene_a1.top());
+			sellQuene_a1.pop();
+		}
+		//关闭线程锁
+		LeaveCriticalSection(&sellQuene_CS_a1);
+		LeaveCriticalSection(&sellQuene_CS);
+
+		EnterCriticalSection(&buyQuene_CS_a1);
+		EnterCriticalSection(&buyQuene_CS);
+		number+= buyQuene_a1.size();
+		for (size_t i = 0; i < buyQuene_a1.size(); i++)
+		{
+			buyQuene.push(buyQuene_a1.top());
+			buyQuene_a1.pop();
+		}
+		LeaveCriticalSection(&buyQuene_CS_a1);
+		LeaveCriticalSection(&buyQuene_CS);
+	}
 }
 /*
 sell撤单核心方法
