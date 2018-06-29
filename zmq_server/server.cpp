@@ -134,9 +134,10 @@ void Syn_RMQ()
 		{
 			cs++;
 			EnterCriticalSection(&RMQ_Quene_CS);
-			rmq.send(RMQ_Quene.front());
+			Tx tx = RMQ_Quene.front();
 			RMQ_Quene.pop();
 			LeaveCriticalSection(&RMQ_Quene_CS);
+			rmq.send(tx);
 		}
 		if (cs>number)
 		{
