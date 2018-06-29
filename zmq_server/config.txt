@@ -10,6 +10,7 @@ RMQ.port=5672
 RMQ.name=admin
 RMQ.pwd=admin
 RMQ.synTime=100
+RMQ.number=3000
 
 Redis.url=192.168.0.173
 Redis.port=6379

@@ -125,8 +125,9 @@ void  remakeOrder()
 void Syn_RMQ() 
 {
 	int cs = 0;
-	int synTime;
+	int synTime,number;
 	synTime=configSettings.Read("RMQ.synTime", synTime);
+	number= configSettings.Read("RMQ.number", synTime);
 	while (true)
 	{
 		if (RMQ_Quene.size()>0)
@@ -137,7 +138,7 @@ void Syn_RMQ()
 			RMQ_Quene.pop();
 			LeaveCriticalSection(&RMQ_Quene_CS);
 		}
-		if (cs>3000)
+		if (cs>number)
 		{
 			cs = 0;
 			Sleep(synTime);
