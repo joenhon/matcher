@@ -3,20 +3,20 @@
 
 RabbitMQ::RabbitMQ()
 {
+	//绑定url并登陆
+	login(conn);
+	//打开连接
+	open(conn);
 }
 
 
 RabbitMQ::~RabbitMQ()
 {
-	
+	//关闭连接
+	close(conn);
 }
 bool RabbitMQ::send(Tx tx)
 {
-	amqp_connection_state_t conn=NULL;
-	//绑定url并登陆
-	login(conn);
-	//打开连接
-	open(conn);
 	char const *exchange ="";/*请勿给值（给值会使bindingkey失效） */
 		
 		//初始化消息体
@@ -29,8 +29,7 @@ bool RabbitMQ::send(Tx tx)
 			amqp_cstring_bytes(new_root.c_str()));
 		//发送信息END
 
-		//关闭连接
-		close(conn);
+		
 	//RMQ_END
 	return false;
 }
@@ -75,14 +74,14 @@ string RabbitMQ::TxtoJSON(Tx tx)
 	return new_item.toStyledString();
 }
 
-void RabbitMQ::open(amqp_connection_state_t& conn)
+void RabbitMQ::open(amqp_connection_state_t& conn_)
 {
 	//打开连接
-	amqp_channel_open(conn, 1);
-	amqp_get_rpc_reply(conn);
+	amqp_channel_open(conn_, 1);
+	amqp_get_rpc_reply(conn_);
 }
 
-void RabbitMQ::login(amqp_connection_state_t& conn)
+void RabbitMQ::login(amqp_connection_state_t& conn_)
 {
 	Config_ configSettings("config.txt");
 	string name;
@@ -94,15 +93,15 @@ void RabbitMQ::login(amqp_connection_state_t& conn)
 	pwd = configSettings.Read("RMQ.pwd", pwd);
 
 	//RMQ
-	conn = amqp_new_connection();
-	socket_qmqp = amqp_tcp_socket_new(conn);
+	conn_ = amqp_new_connection();
+	socket_qmqp = amqp_tcp_socket_new(conn_);
 	status = amqp_socket_open(socket_qmqp, hostname.c_str(), port);
-	amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, name, pwd);//登录
+	amqp_login(conn_, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, name, pwd);//登录
 }
 
-void RabbitMQ::close(amqp_connection_state_t& conn)
+void RabbitMQ::close(amqp_connection_state_t& conn_)
 {
-	amqp_channel_close(conn, 1, AMQP_REPLY_SUCCESS);
-	amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
-	amqp_destroy_connection(conn);
+	amqp_channel_close(conn_, 1, AMQP_REPLY_SUCCESS);
+	amqp_connection_close(conn_, AMQP_REPLY_SUCCESS);
+	amqp_destroy_connection(conn_);
 }

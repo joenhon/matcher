@@ -12,9 +12,11 @@
 #include "amqp_framing.h" 
 #include "Config_.h"
 //#include "windows.h"”ÎRMQ≥ÂÕª
+
 class RabbitMQ
 {
 public:
+	amqp_connection_state_t conn = NULL;
 	int status;
 	//char  *messagebody;
 	int sockfd;

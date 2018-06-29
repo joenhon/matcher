@@ -32,8 +32,8 @@ void OrderTradeThread::addOrder()
 	//连接类型
 	void* z_socket = zmq_socket(context, ZMQ_PULL);
 
-	Redis* red((redis.getObj()).get());
-	Redis redis_ = *red;
+	//Redis* red((redis.getObj()).get());
+	//Redis redis_ = *red;
 
 	
 

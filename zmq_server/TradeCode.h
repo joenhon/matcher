@@ -7,6 +7,7 @@
 #include <boost\lexical_cast.hpp>
 #include "O.h"
 #include <queue>
+#include <cstdlib>
 #include "Tx.h"
 #include "json/json.h"
 #include "amqp_tcp_socket.h"  
@@ -62,16 +63,18 @@ using namespace std;
  extern priority_queue<O, vector<O>, SellQuene> removeSellQuene;
 
  /*定时同步Quene与Quene_a1*/
- //由定时控制的优先级队列/*定时，将网络繁忙度通过算法的出下一次同步的间隔*/
- extern priority_queue<O, vector<O>, BuyQuene> buyQuene_a1;
- extern priority_queue<O, vector<O>, SellQuene> sellQuene_a1;
+ //由定时控制的队列/*定时，将网络繁忙度通过算法的出下一次同步的间隔*/
+ extern queue<O> buyQuene_a1;
+ extern queue<O> sellQuene_a1;
+ //由定时控制的队列/*定时向RabbitMQ发送数据*/
+ extern queue<Tx> RMQ_Quene;
  //线程锁，调用需同步的方法或参数执行，阻塞其他的调用，直到调用的方法完成调用
- extern CRITICAL_SECTION buyQuene_CS,sellQuene_CS, removeBuyQuene_CS, removeSellQuene_CS, RabbitMQ_Send_CS, buyQuene_CS_a1, sellQuene_CS_a1;
+ extern CRITICAL_SECTION buyQuene_CS,sellQuene_CS, removeBuyQuene_CS, removeSellQuene_CS, RabbitMQ_Send_CS, buyQuene_CS_a1, sellQuene_CS_a1, RMQ_Quene_CS;
 
  extern ObjPool<RabbitMQ> RMQ;
  extern ObjPool<Redis> redis;
  static cs_zmq c;
-
+ static RabbitMQ rmq;
 
  class TradeCode
 {
@@ -80,7 +83,7 @@ public:
 	~TradeCode();
 	
 	
-	RabbitMQ RMQ;
+	
 	/**
 	* 交易核心方法（撮合买卖单）
 	*/

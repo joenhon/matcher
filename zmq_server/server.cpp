@@ -24,6 +24,7 @@ using namespace std;
 static TradeCode TC;
 void addOrder();
 void addOrder();
+void Syn_RMQ();
 void SynchronousQueue();
 void sellRevoke();
 void buyRevoke();
@@ -31,6 +32,7 @@ void remakeOrder();
 //void PrintfNode(O o);
 OrderTradeThread OTT;
 RemoveOrderTradeThread ROTT;
+Config_ configSettings("config.txt");
 enum Type
 {
 	nullValue = 0, ///< 'null' value  
@@ -44,8 +46,8 @@ enum Type
 };
 int main()
 {
-	Redis* red((redis.getObj()).get());
-	Redis redis_ = *red;
+	//Redis* red((redis.getObj()).get());
+	//Redis redis_ = *red;
 	system("pause");
 	cout << "" << endl;
 	InitializeCriticalSection(&sellQuene_CS);
@@ -55,6 +57,7 @@ int main()
 	InitializeCriticalSection(&RabbitMQ_Send_CS);
 	InitializeCriticalSection(&buyQuene_CS_a1);
 	InitializeCriticalSection(&sellQuene_CS_a1);
+	InitializeCriticalSection(&RMQ_Quene_CS);
 	ToJson<BuyQuene> toJson_buyQuene;
 	ToJson<SellQuene> toJson_sellQuene;
 	ToJson<BuyQuene> toJson_removeBuyQuene;
@@ -87,7 +90,7 @@ int main()
 	LeaveCriticalSection(&removeSellQuene_CS);
 	LeaveCriticalSection(&removeBuyQuene_CS);
 	*/
-	thread addOrder(addOrder), remakeOrder(remakeOrder), sellRevokeThreda(sellRevoke), buyRevokeThreda(buyRevoke), SynchronousQueue(SynchronousQueue);
+	thread addOrder(addOrder), remakeOrder(remakeOrder), sellRevokeThreda(sellRevoke), buyRevokeThreda(buyRevoke), SynchronousQueue(SynchronousQueue),SynchronousRMQ_Queue(Syn_RMQ);
 	//HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, addOrder, 0, 0, NULL);
 	//核心（撮合）
 	while (true)
@@ -117,19 +120,47 @@ void  remakeOrder()
 	ROTT.remakeOrder();
 }
 /*
+定时发送完成订单
+*/
+void Syn_RMQ() 
+{
+	int cs = 0;
+	int synTime;
+	synTime=configSettings.Read("RMQ.synTime", synTime);
+	while (true)
+	{
+		if (RMQ_Quene.size()>0)
+		{
+			cs++;
+			EnterCriticalSection(&RMQ_Quene_CS);
+			rmq.send(RMQ_Quene.front());
+			RMQ_Quene.pop();
+			LeaveCriticalSection(&RMQ_Quene_CS);
+		}
+		if (cs>3000)
+		{
+			cs = 0;
+			Sleep(synTime);
+			cout << RMQ_Quene.size() << endl;
+		}
+		
+	}
+}
+/*
 同步队列
 */
 void SynchronousQueue()
 {
 	int number = 10, old = 10;
+	int synTime;
+	synTime = configSettings.Read("Queue.synTime", synTime);
 	while (true) {
 		if (number==0)
 		{
 			number = 10;
 			old = 10;
 		}
-		int syn = ceil((number / old + 1)*5);
-		cout << syn << endl;
+		int syn = ceil((number / old + 1)*synTime);
 		Sleep(syn);
 		old = syn;
 		//执行同步
@@ -137,9 +168,9 @@ void SynchronousQueue()
 		EnterCriticalSection(&sellQuene_CS_a1);
 		EnterCriticalSection(&sellQuene_CS);
 		number = sellQuene_a1.size();
-		for (size_t i = 0; i < sellQuene_a1.size(); i++)
+		while (sellQuene_a1.empty()==0)
 		{
-			sellQuene.push(sellQuene_a1.top());
+			sellQuene.push(sellQuene_a1.front());
 			sellQuene_a1.pop();
 		}
 		//关闭线程锁
@@ -149,9 +180,9 @@ void SynchronousQueue()
 		EnterCriticalSection(&buyQuene_CS_a1);
 		EnterCriticalSection(&buyQuene_CS);
 		number+= buyQuene_a1.size();
-		for (size_t i = 0; i < buyQuene_a1.size(); i++)
+		while (buyQuene_a1.empty() == 0)
 		{
-			buyQuene.push(buyQuene_a1.top());
+			buyQuene.push(buyQuene_a1.front());
 			buyQuene_a1.pop();
 		}
 		LeaveCriticalSection(&buyQuene_CS_a1);

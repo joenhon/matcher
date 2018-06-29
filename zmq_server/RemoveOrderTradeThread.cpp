@@ -28,8 +28,8 @@ void RemoveOrderTradeThread::remakeOrder()
 	//连接类型
 	void* z_socket = zmq_socket(context, ZMQ_PULL);
 
-	Redis* red((redis.getObj()).get());
-	Redis redis_ = *red;
+	//Redis* red((redis.getObj()).get());
+	//Redis redis_ = *red;
 
 	zmq_bind(z_socket, url.c_str());    // accept connections on a socket
 												   //订单
@@ -62,10 +62,10 @@ void RemoveOrderTradeThread::remakeOrder()
 						removeBuyQuene.push(order);//向撤买单队列添加
 						LeaveCriticalSection(&removeBuyQuene_CS);
 
-						ToJson<BuyQuene> toJson;
-						redis_.open();
-						redis_.setRedis("removeBuyQuene", toJson.OToJson(removeBuyQuene));
-						toJson.~ToJson();
+						//ToJson<BuyQuene> toJson;
+						//redis_.open();
+						//redis_.setRedis("removeBuyQuene", toJson.OToJson(removeBuyQuene));
+						//toJson.~ToJson();
 					}
 					else
 					{
@@ -73,10 +73,10 @@ void RemoveOrderTradeThread::remakeOrder()
 						removeSellQuene.push(order);//向撤卖单队列添加
 						LeaveCriticalSection(&removeSellQuene_CS);
 
-						ToJson<SellQuene> toJson;
-						redis_.open();
-						redis_.setRedis("removeSellQuene", toJson.OToJson(removeSellQuene));
-						toJson.~ToJson();
+						//ToJson<SellQuene> toJson;
+						//redis_.open();
+						//redis_.setRedis("removeSellQuene", toJson.OToJson(removeSellQuene));
+						//toJson.~ToJson();
 					}
 					//zmq_msg_init_size(&send_msg, 2);
 					//memcpy(zmq_msg_data(&send_msg), "ok", 2);

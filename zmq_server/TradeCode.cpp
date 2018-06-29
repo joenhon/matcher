@@ -4,11 +4,12 @@
  priority_queue<O, vector<O>, SellQuene> sellQuene;
  priority_queue<O, vector<O>, BuyQuene> removeBuyQuene;
  priority_queue<O, vector<O>, SellQuene> removeSellQuene;
- priority_queue<O, vector<O>, BuyQuene> buyQuene_a1;
- priority_queue<O, vector<O>, SellQuene> sellQuene_a1;
- CRITICAL_SECTION buyQuene_CS, sellQuene_CS, removeBuyQuene_CS, removeSellQuene_CS, RabbitMQ_Send_CS, buyQuene_CS_a1, sellQuene_CS_a1;
- ObjPool<RabbitMQ> RMQ;
- ObjPool<Redis> redis;
+ queue<O> buyQuene_a1;
+ queue<O> sellQuene_a1;
+ queue<Tx> RMQ_Quene;
+ CRITICAL_SECTION buyQuene_CS, sellQuene_CS, removeBuyQuene_CS, removeSellQuene_CS, RabbitMQ_Send_CS, buyQuene_CS_a1, sellQuene_CS_a1, RMQ_Quene_CS;
+ //ObjPool<RabbitMQ> RMQ;
+ //RabbitMQ rmq;
 
 TradeCode::TradeCode()
 {
@@ -131,10 +132,11 @@ void TradeCode::core()
 									
 
 									//发送撮合完成订单信息
-									/*RabbitMQ rmq;
-									rmq.send(tx);
-									rmq.~RabbitMQ();*/	
-									c.fs();
+									EnterCriticalSection(&RMQ_Quene_CS);
+									RMQ_Quene.push(tx);
+									LeaveCriticalSection(&RMQ_Quene_CS);
+									
+									//c.fs();
 									//LeaveCriticalSection(&RabbitMQ_Send_CS);
 									/*将数据备份到Redis中（暂定）*/
 									//Redis_();
@@ -215,11 +217,9 @@ void TradeCode::remaveSell(priority_queue<O, vector<O>, SellQuene>& p)
 				tx.setTxType("sell");
 				try
 				{
-					EnterCriticalSection(&RabbitMQ_Send_CS);
-					RabbitMQ rmq;
-					rmq.send(tx);
-					rmq.~RabbitMQ();
-					LeaveCriticalSection(&RabbitMQ_Send_CS);
+					EnterCriticalSection(&RMQ_Quene_CS);
+					RMQ_Quene.push(tx);
+					LeaveCriticalSection(&RMQ_Quene_CS);
 				}
 				catch (const std::exception&)
 				{
@@ -261,11 +261,9 @@ void TradeCode::remaveBuy(priority_queue<O, vector<O>, BuyQuene>& p)
 				tx.setTxType("buy");
 				try
 				{
-					EnterCriticalSection(&RabbitMQ_Send_CS);
-					RabbitMQ rmq;
-					rmq.send(tx);
-					rmq.~RabbitMQ();
-					LeaveCriticalSection(&RabbitMQ_Send_CS);
+					EnterCriticalSection(&RMQ_Quene_CS);
+					RMQ_Quene.push(tx);
+					LeaveCriticalSection(&RMQ_Quene_CS);
 				}
 				catch (const std::exception&)
 				{
@@ -323,7 +321,7 @@ O TradeCode::top_RemoveBuyQueue()
 
 void TradeCode::Redis_()
 {
-	Redis* red((redis.getObj()).get());
+	/*Redis* red((redis.getObj()).get());
 	Redis redis_ = *red;
 	ToJson<SellQuene> toJson;
 	redis_.open();
@@ -333,7 +331,7 @@ void TradeCode::Redis_()
 	ToJson<BuyQuene> toJson_;
 	redis_.setRedis("buyQuene", toJson_.OToJson(buyQuene));
 
-	toJson_.~ToJson();
+	toJson_.~ToJson();*/
 }
 
 

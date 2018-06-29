@@ -5,9 +5,13 @@ addOrder.url=tcp://192.168.0.173:55557
 remakeOrder.url=tcp://192.168.0.173:9998
 
 RMQ.hostname=192.168.0.116
-RMQ.bindingkey=q_s_eth_bss_tx
+RMQ.bindingkey=q_spot_btc_eth_tx
 RMQ.port=5672
 RMQ.name=admin
 RMQ.pwd=admin
+RMQ.synTime=100
+
 Redis.url=192.168.0.173
 Redis.port=6379
+
+Queue.synTime=5
